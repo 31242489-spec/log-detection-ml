@@ -24,7 +24,12 @@ status = st.selectbox("Status Code", [200, 404, 500])
 requests_count = st.number_input("Requests", 1, 1000, 50)
 bytes_ = st.number_input("Bytes", 100, 10000, 1000)
 
+# ----------------------------
+# PREDICT BUTTON (FIXED)
+# ----------------------------
 if st.button("Predict"):
+    st.write("Calling API:", API_URL)
+
     data = {
         "features": [ip, status, requests_count, bytes_]
     }
@@ -37,18 +42,24 @@ if st.button("Predict"):
             timeout=10
         )
 
+        # Debug output
         st.write("Status Code:", response.status_code)
+        st.write("Response Text:", response.text)
 
         if response.status_code == 200:
-            result = response.json()
+            try:
+                result = response.json()
 
-            if result["prediction"] == 1:
-                st.error("⚠ Malicious Activity Detected")
-            else:
-                st.success("✅ Normal Activity")
+                if result.get("prediction") == 1:
+                    st.error("⚠ Malicious Activity Detected")
+                else:
+                    st.success("✅ Normal Activity")
+
+            except:
+                st.error("Invalid JSON response from API")
+
         else:
             st.error("API Error")
-            st.write(response.text)
 
     except Exception as e:
         st.error(f"Request failed: {e}")
@@ -80,8 +91,11 @@ if uploaded_file is not None:
             )
 
             if response.status_code == 200:
-                result = response.json()
-                predictions.append(result.get("prediction", "error"))
+                try:
+                    result = response.json()
+                    predictions.append(result.get("prediction", "error"))
+                except:
+                    predictions.append("error")
             else:
                 predictions.append("error")
 
