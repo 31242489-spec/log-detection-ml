@@ -3,16 +3,19 @@ import requests
 import pandas as pd
 
 # ----------------------------
-# CONFIG
+# PAGE CONFIG
 # ----------------------------
-st.set_page_config(page_title="Log Detection", layout="centered")
+st.set_page_config(page_title="Log Detection System", layout="centered")
 
 st.title("Malicious Log Detection System")
 
-# 👉 Replace with your actual API URL
-API_URL = "http://log-detection-ml-1:10000/predict"
 # ----------------------------
-# SINGLE INPUT
+# API URL (IMPORTANT)
+# ----------------------------
+API_URL = "https://log-detection-ml-1.onrender.com/predict"
+
+# ----------------------------
+# SINGLE INPUT SECTION
 # ----------------------------
 st.header("Single Log Prediction")
 
@@ -27,34 +30,31 @@ if st.button("Predict"):
     }
 
     try:
-        response = requests.post(API_URL, json=data)
+        response = requests.post(
+            API_URL,
+            json=data,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
 
         st.write("Status Code:", response.status_code)
-        st.write("Response Text:", response.text)
 
         if response.status_code == 200:
-            try:
-                result = response.json()
+            result = response.json()
 
-                if "prediction" in result:
-                    if result["prediction"] == 1:
-                        st.error("⚠ Malicious Activity Detected")
-                    else:
-                        st.success("✅ Normal Activity")
-                else:
-                    st.error("Unexpected response format")
-                    st.write(result)
-
-            except:
-                st.error("Invalid JSON response from API")
+            if result["prediction"] == 1:
+                st.error("⚠ Malicious Activity Detected")
+            else:
+                st.success("✅ Normal Activity")
         else:
             st.error("API Error")
-    
+            st.write(response.text)
+
     except Exception as e:
         st.error(f"Request failed: {e}")
 
 # ----------------------------
-# FILE UPLOAD
+# BULK UPLOAD SECTION
 # ----------------------------
 st.header("Bulk Log Detection")
 
@@ -67,17 +67,21 @@ if uploaded_file is not None:
     predictions = []
 
     for _, row in df.iterrows():
-        data = {"features": row.tolist()}
+        data = {
+            "features": row.tolist()
+        }
 
         try:
-            response = requests.post(API_URL, json=data)
+            response = requests.post(
+                API_URL,
+                json=data,
+                headers={"Content-Type": "application/json"},
+                timeout=10
+            )
 
             if response.status_code == 200:
-                try:
-                    result = response.json()
-                    predictions.append(result.get("prediction", "error"))
-                except:
-                    predictions.append("error")
+                result = response.json()
+                predictions.append(result.get("prediction", "error"))
             else:
                 predictions.append("error")
 
