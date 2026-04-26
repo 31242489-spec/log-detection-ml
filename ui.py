@@ -10,8 +10,7 @@ st.set_page_config(page_title="Log Detection", layout="centered")
 st.title("Malicious Log Detection System")
 
 # 👉 Replace with your actual API URL
-API_URL = "https://log-detection-ml-1.onrender.com/predict"
-
+API_URL = "http://log-detection-ml-1:10000/predict"
 # ----------------------------
 # SINGLE INPUT
 # ----------------------------
