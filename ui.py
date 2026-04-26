@@ -2,8 +2,14 @@ import streamlit as st
 import requests
 import pandas as pd
 
+# ----------------------------
+# CONFIG
+# ----------------------------
+st.set_page_config(page_title="Log Detection", layout="centered")
+
 st.title("Malicious Log Detection System")
 
+# 👉 Replace with your actual API URL
 API_URL = "https://log-detection-ml-1.onrender.com/predict"
 
 # ----------------------------
@@ -20,29 +26,65 @@ if st.button("Predict"):
     data = {
         "features": [ip, status, requests_count, bytes_]
     }
-    response = requests.post(API_URL, json=data)
 
-   response = requests.post(API_URL, json=data)
+    try:
+        response = requests.post(API_URL, json=data)
 
-st.write("Status Code:", response.status_code)
-st.write("Response Text:", response.text)
+        st.write("Status Code:", response.status_code)
+        st.write("Response Text:", response.text)
+
+        if response.status_code == 200:
+            try:
+                result = response.json()
+
+                if "prediction" in result:
+                    if result["prediction"] == 1:
+                        st.error("⚠ Malicious Activity Detected")
+                    else:
+                        st.success("✅ Normal Activity")
+                else:
+                    st.error("Unexpected response format")
+                    st.write(result)
+
+            except:
+                st.error("Invalid JSON response from API")
+        else:
+            st.error("API Error")
+    
+    except Exception as e:
+        st.error(f"Request failed: {e}")
 
 # ----------------------------
 # FILE UPLOAD
 # ----------------------------
 st.header("Bulk Log Detection")
 
-uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
+uploaded_file = st.file_uploader("Upload CSV file", type=["csv"])
 
-if uploaded_file:
+if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
     st.write("Input Data:", df)
 
     predictions = []
+
     for _, row in df.iterrows():
         data = {"features": row.tolist()}
-        response = requests.post(API_URL, json=data)
-        predictions.append(response.json()["prediction"])
+
+        try:
+            response = requests.post(API_URL, json=data)
+
+            if response.status_code == 200:
+                try:
+                    result = response.json()
+                    predictions.append(result.get("prediction", "error"))
+                except:
+                    predictions.append("error")
+            else:
+                predictions.append("error")
+
+        except:
+            predictions.append("error")
 
     df["Prediction"] = predictions
-    st.write("Output:", df)
+
+    st.write("Output Data:", df)
