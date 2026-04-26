@@ -6,12 +6,31 @@ app = Flask(__name__)
 
 model = joblib.load("model.pkl")
 
+# ----------------------------
+# CORS FIX (IMPORTANT)
+# ----------------------------
+@app.after_request
+def after_request(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
+    return response
+
+# ----------------------------
+# HOME
+# ----------------------------
 @app.route("/")
 def home():
     return "API Running"
 
-@app.route("/predict", methods=["POST"])
+# ----------------------------
+# PREDICT
+# ----------------------------
+@app.route("/predict", methods=["POST", "OPTIONS"])
 def predict():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"})  # preflight response
+
     try:
         data = request.get_json(force=True)
         features = np.array(data["features"]).reshape(1, -1)
@@ -22,6 +41,3 @@ def predict():
 
     except Exception as e:
         return jsonify({"error": str(e)})
-
-if __name__ == "__main__":
-    app.run()
