@@ -22,11 +22,10 @@ if st.button("Predict"):
     }
     response = requests.post(API_URL, json=data)
 
-    result = response.json()
-    if result["prediction"] == 1:
-        st.error("⚠ Malicious Activity Detected")
-    else:
-        st.success("Normal Activity")
+   response = requests.post(API_URL, json=data)
+
+st.write("Status Code:", response.status_code)
+st.write("Response Text:", response.text)
 
 # ----------------------------
 # FILE UPLOAD
