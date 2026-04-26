@@ -4,7 +4,7 @@ import pandas as pd
 
 st.title("Malicious Log Detection System")
 
-API_URL = "https://log-detection-ml-1.onrender.com//predict"
+API_URL = "https://log-detection-ml-1.onrender.com/predict"
 
 # ----------------------------
 # SINGLE INPUT
