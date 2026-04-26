@@ -3,3 +3,6 @@ numpy
 scikit-learn
 joblib
 gunicorn
+streamlit
+requests
+pandas
