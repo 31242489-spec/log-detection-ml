@@ -23,7 +23,11 @@ if st.button("Predict"):
     }
 
     try:
-        response = requests.post(API_URL, json=data)
+        response = requests.post(
+            API_URL,
+            json=data,
+            headers={"User-Agent": "Mozilla/5.0"}  # 🔥 Fix for 403
+        )
 
         if response.status_code == 200:
             result = response.json()
@@ -39,6 +43,7 @@ if st.button("Predict"):
 
         else:
             st.warning(f"API Error: {response.status_code}")
+            st.write(response.text)
 
     except Exception as e:
         st.error(f"Request failed: {e}")
@@ -58,17 +63,19 @@ if uploaded_file is not None:
     st.write(df)
 
     try:
-        # 🔹 Keep Name, but exclude for prediction
+        # 🔹 Keep Name, exclude for prediction
         features = df[["IP", "Status", "Requests", "Bytes"]]
 
-        response = requests.post(API_URL, json={
-            "features": features.values.tolist()
-        })
+        response = requests.post(
+            API_URL,
+            json={"features": features.values.tolist()},
+            headers={"User-Agent": "Mozilla/5.0"}  # 🔥 Fix for 403
+        )
 
         if response.status_code == 200:
             result = response.json()
 
-            # 🔥 Handle both response types
+            # Handle both single & bulk
             if "predictions" in result:
                 predictions = result["predictions"]
             elif "prediction" in result:
@@ -79,10 +86,8 @@ if uploaded_file is not None:
                 predictions = []
 
             if predictions:
-                # Add prediction column
                 df["Prediction"] = predictions
 
-                # Convert to readable labels
                 df["Prediction"] = df["Prediction"].apply(
                     lambda x: "Malicious" if x == 1 else "Normal"
                 )
