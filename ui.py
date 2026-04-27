@@ -22,17 +22,26 @@ if st.button("Predict"):
         "features": [ip, status, requests_count, bytes_data]
     }
 
-    response = requests.post(API_URL, json=data)
+    try:
+        response = requests.post(API_URL, json=data)
 
-    if response.status_code == 200:
-        result = response.json()
+        if response.status_code == 200:
+            result = response.json()
 
-        if result["prediction"] == 1:
-            st.error("Malicious Activity")
+            if "prediction" in result:
+                if result["prediction"] == 1:
+                    st.error("Malicious Activity")
+                else:
+                    st.success("Normal Activity")
+            else:
+                st.error("Invalid response from API")
+                st.write(result)
+
         else:
-            st.success("Normal Activity")
-    else:
-        st.warning("API Error")
+            st.warning(f"API Error: {response.status_code}")
+
+    except Exception as e:
+        st.error(f"Request failed: {e}")
 
 
 # =========================
@@ -49,30 +58,41 @@ if uploaded_file is not None:
     st.write(df)
 
     try:
-        # 🔹 Keep Name for display, but exclude from prediction
+        # 🔹 Keep Name, but exclude for prediction
         features = df[["IP", "Status", "Requests", "Bytes"]]
 
-        # 🔹 Send to API
         response = requests.post(API_URL, json={
             "features": features.values.tolist()
         })
 
         if response.status_code == 200:
-            predictions = response.json()["predictions"]
+            result = response.json()
 
-            # 🔹 Add prediction column
-            df["Prediction"] = predictions
+            # 🔥 Handle both response types
+            if "predictions" in result:
+                predictions = result["predictions"]
+            elif "prediction" in result:
+                predictions = [result["prediction"]]
+            else:
+                st.error("Invalid API response")
+                st.write(result)
+                predictions = []
 
-            # 🔹 Convert to readable labels
-            df["Prediction"] = df["Prediction"].apply(
-                lambda x: "Malicious" if x == 1 else "Normal"
-            )
+            if predictions:
+                # Add prediction column
+                df["Prediction"] = predictions
 
-            st.subheader("Prediction Results")
-            st.write(df)
+                # Convert to readable labels
+                df["Prediction"] = df["Prediction"].apply(
+                    lambda x: "Malicious" if x == 1 else "Normal"
+                )
+
+                st.subheader("Prediction Results")
+                st.write(df)
 
         else:
-            st.warning("API Error")
+            st.warning(f"API Error: {response.status_code}")
+            st.write(response.text)
 
     except Exception as e:
         st.error(f"Error: {e}")
