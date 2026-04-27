@@ -2,7 +2,7 @@ import tkinter as tk
 import requests
 
 # API URL
-API_URL = "https://log-detection-ml-1.onrender.com/predict"
+API_URL = "https://log-detection-ml-2.onrender.com//predict"
 
 def predict():
     try:
